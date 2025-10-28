@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class Produto {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // IDENTITY para serial no PostgreSQL
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer codigo;
 
     @Column(nullable = false, length = 100)
