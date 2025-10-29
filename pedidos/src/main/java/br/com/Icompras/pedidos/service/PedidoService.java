@@ -1,8 +1,11 @@
 package br.com.Icompras.pedidos.service;
 
 import br.com.Icompras.pedidos.client.ServicoBancarioClient;
+import br.com.Icompras.pedidos.controller.dto.DadosPagamentoDTO;
+import br.com.Icompras.pedidos.model.DadosPagamentos;
 import br.com.Icompras.pedidos.model.Pedido;
 import br.com.Icompras.pedidos.model.enums.StatusPedido;
+import br.com.Icompras.pedidos.model.enums.TipoPagamento;
 import br.com.Icompras.pedidos.repository.ItemPedidoRepository;
 import br.com.Icompras.pedidos.repository.PedidoRepository;
 import br.com.Icompras.pedidos.validator.Pedidovalidator;
@@ -60,5 +63,28 @@ public Pedido criarPedido(Pedido pedido){
             pedido.setObservacoes(observacoes);
         }
         repository.save(pedido);
+    }
+
+    @Transactional
+    public void adicionarNovoPagamento(Long codigoPedido, String dadosCartao,
+                                       TipoPagamento tipo){
+    var pedidoEncotrado = repository.findById(codigoPedido);
+    if (pedidoEncotrado.isEmpty()){
+        return;
+    }
+
+    var pedido = pedidoEncotrado.get();
+
+    var dadosPagamentos = new DadosPagamentoDTO(dadosCartao, tipo);
+
+        pedido.setDadosPagamentos(dadosPagamentos);
+        pedido.setStatus(StatusPedido.REALIZADO);
+        pedido.setObservacoes("Novo pagamento realizado, aguardando o processamento");
+
+        // Não seria necessario coloar esse repositori atualizando o pedido pois ele já se encontra dentro de uma transação
+        repository.save(pedido);
+
+        String novaChavePagamento = servicoBancarioClient.solictarPagamento(pedido);
+        pedido.setChavePagamento(novaChavePagamento);
     }
 }

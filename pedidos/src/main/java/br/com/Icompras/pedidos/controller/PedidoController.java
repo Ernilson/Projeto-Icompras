@@ -1,6 +1,7 @@
 package br.com.Icompras.pedidos.controller;
 
 
+import br.com.Icompras.pedidos.controller.dto.AdicaoNovoPagamentoDTO;
 import br.com.Icompras.pedidos.controller.dto.NovoPedidoDTO;
 import br.com.Icompras.pedidos.controller.mappers.PedidoMapper;
 import br.com.Icompras.pedidos.model.exceptions.ErroResposta;
@@ -42,6 +43,12 @@ public class PedidoController {
             var erro = new ErroResposta("Erro validação", e.getFiel(), e.getMessage());
             return ResponseEntity.badRequest().body(erro);
         }
+    }
+
+    @PostMapping("pagamentos")
+    public ResponseEntity<Object> adicionarNovoPagamento(@RequestBody AdicaoNovoPagamentoDTO dto){
+        service.adicionarNovoPagamento(dto.codigoPedido(), dto.dados(), dto.tipoPagamento());
+        return ResponseEntity.noContent().build();
     }
 
 }
