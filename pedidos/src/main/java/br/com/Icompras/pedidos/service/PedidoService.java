@@ -6,6 +6,7 @@ import br.com.Icompras.pedidos.model.DadosPagamentos;
 import br.com.Icompras.pedidos.model.Pedido;
 import br.com.Icompras.pedidos.model.enums.StatusPedido;
 import br.com.Icompras.pedidos.model.enums.TipoPagamento;
+import br.com.Icompras.pedidos.model.exceptions.ItemNaoEncontradoException;
 import br.com.Icompras.pedidos.repository.ItemPedidoRepository;
 import br.com.Icompras.pedidos.repository.PedidoRepository;
 import br.com.Icompras.pedidos.validator.Pedidovalidator;
@@ -70,7 +71,7 @@ public Pedido criarPedido(Pedido pedido){
                                        TipoPagamento tipo){
     var pedidoEncotrado = repository.findById(codigoPedido);
     if (pedidoEncotrado.isEmpty()){
-        return;
+        throw new ItemNaoEncontradoException("Pedido não encontrado pare o código informado");
     }
 
     var pedido = pedidoEncotrado.get();

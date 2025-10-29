@@ -5,6 +5,7 @@ import br.com.Icompras.pedidos.controller.dto.AdicaoNovoPagamentoDTO;
 import br.com.Icompras.pedidos.controller.dto.NovoPedidoDTO;
 import br.com.Icompras.pedidos.controller.mappers.PedidoMapper;
 import br.com.Icompras.pedidos.model.exceptions.ErroResposta;
+import br.com.Icompras.pedidos.model.exceptions.ItemNaoEncontradoException;
 import br.com.Icompras.pedidos.model.exceptions.ValidationsExceptions;
 import br.com.Icompras.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
@@ -47,8 +48,14 @@ public class PedidoController {
 
     @PostMapping("pagamentos")
     public ResponseEntity<Object> adicionarNovoPagamento(@RequestBody AdicaoNovoPagamentoDTO dto){
-        service.adicionarNovoPagamento(dto.codigoPedido(), dto.dados(), dto.tipoPagamento());
-        return ResponseEntity.noContent().build();
+        try {
+            service.adicionarNovoPagamento(dto.codigoPedido(), dto.dados(), dto.tipoPagamento());
+            return ResponseEntity.noContent().build();
+        } catch (ItemNaoEncontradoException e) {
+            var erro = new ErroResposta("Item não encontrado", "codigoPedido", e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
+
     }
 
 }
