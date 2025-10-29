@@ -26,3 +26,11 @@ icompras:
       clientes:
         url: 'http://localhost:8082/clientes'
 
+  config:
+    kafka:
+      server-url: 'http://localhost:29092'
+      topics:
+        pedidos-pagos: 'icompras.pedidos-pagos'
+        pedidos-faturados: 'icompras.pedidos-faturados'
+        pedidos-enviados: 'icompras.pedidos-enviados'
+
