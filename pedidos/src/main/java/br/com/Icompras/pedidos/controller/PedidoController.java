@@ -3,6 +3,8 @@ package br.com.Icompras.pedidos.controller;
 
 import br.com.Icompras.pedidos.controller.dto.NovoPedidoDTO;
 import br.com.Icompras.pedidos.controller.mappers.PedidoMapper;
+import br.com.Icompras.pedidos.model.exceptions.ErroResposta;
+import br.com.Icompras.pedidos.model.exceptions.ValidationsExceptions;
 import br.com.Icompras.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<Object> criar(@RequestBody NovoPedidoDTO dto){
+        try {
         var pedido = mapper.map(dto);
         var novoPedido = service.criarPedido(pedido);
 
@@ -35,6 +38,10 @@ public class PedidoController {
 
         // Retorna 201 Created com a URI no cabeçalho e o objeto salvo no corpo
         return ResponseEntity.created(location).body(novoPedido);
+        } catch (ValidationsExceptions e) {
+            var erro = new ErroResposta("Erro validação", e.getFiel(), e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
     }
 
 }
