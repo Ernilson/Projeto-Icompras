@@ -1,5 +1,6 @@
 package br.com.Icompras.pedidos.model;
 
+import br.com.Icompras.pedidos.client.representation.ClienteRepresentation;
 import br.com.Icompras.pedidos.controller.dto.DadosPagamentoDTO;
 import br.com.Icompras.pedidos.model.enums.StatusPedido;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -59,5 +60,8 @@ public class Pedido {
     @OneToMany(mappedBy = "pedido")
     @JsonManagedReference
     private List<ItemPedido> itens = new ArrayList<>();
+
+    @Transient
+    private ClienteRepresentation dadosCliente;
 
 }

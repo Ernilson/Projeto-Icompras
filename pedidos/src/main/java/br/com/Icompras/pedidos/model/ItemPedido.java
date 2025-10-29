@@ -42,4 +42,7 @@ public class ItemPedido {
 
     @Column(name = "valor_unitario", nullable = false, precision = 16, scale = 2)
     private BigDecimal valorUnitario;
+
+    @Transient //nome do produto
+    private String nome;
 }

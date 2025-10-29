@@ -1,12 +1,15 @@
 package br.com.Icompras.pedidos.service;
 
+import br.com.Icompras.pedidos.client.ClientesClient;
+import br.com.Icompras.pedidos.client.ProdutosClient;
 import br.com.Icompras.pedidos.client.ServicoBancarioClient;
 import br.com.Icompras.pedidos.controller.dto.DadosPagamentoDTO;
-import br.com.Icompras.pedidos.model.DadosPagamentos;
+import br.com.Icompras.pedidos.model.ItemPedido;
 import br.com.Icompras.pedidos.model.Pedido;
 import br.com.Icompras.pedidos.model.enums.StatusPedido;
 import br.com.Icompras.pedidos.model.enums.TipoPagamento;
 import br.com.Icompras.pedidos.model.exceptions.ItemNaoEncontradoException;
+import br.com.Icompras.pedidos.publisher.PagamentoPublisher;
 import br.com.Icompras.pedidos.repository.ItemPedidoRepository;
 import br.com.Icompras.pedidos.repository.PedidoRepository;
 import br.com.Icompras.pedidos.validator.Pedidovalidator;
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -26,6 +30,9 @@ public class PedidoService {
     private final ItemPedidoRepository itemPedidoRepository;
     private final Pedidovalidator validator;
     private final ServicoBancarioClient servicoBancarioClient;
+    private final ClientesClient apiClientes;
+    private final ProdutosClient apiProdutos;
+    private final PagamentoPublisher publisher;
 
 
 @Transactional
@@ -58,12 +65,19 @@ public Pedido criarPedido(Pedido pedido){
         }
         Pedido pedido = pedidoEncontrado.get();
         if (sucesso){
-            pedido.setStatus(StatusPedido.PAGO);
+            prepararEPublicarPedidoPago(pedido);
         }else {
             pedido.setStatus(StatusPedido.ERRO_PAGAMENTO);
             pedido.setObservacoes(observacoes);
         }
         repository.save(pedido);
+    }
+
+    private void prepararEPublicarPedidoPago(Pedido pedido) {
+        pedido.setStatus(StatusPedido.PAGO);
+        carregarDadosCliente(pedido);
+        carregarDadosItensPedido(pedido);
+        publisher.publicar(pedido);
     }
 
     @Transactional
@@ -87,5 +101,30 @@ public Pedido criarPedido(Pedido pedido){
 
         String novaChavePagamento = servicoBancarioClient.solictarPagamento(pedido);
         pedido.setChavePagamento(novaChavePagamento);
+    }
+
+    public Optional<Pedido> carregarDadosCompletosPedido(Long codigo){
+    Optional<Pedido> pedido = repository.findById(codigo);
+    pedido.ifPresent(this::carregarDadosCliente);
+    pedido.ifPresent(this::carregarDadosItensPedido);
+    return pedido;
+    }
+
+    private void carregarDadosCliente(Pedido pedido){
+        Long codigoCliente = pedido.getCodigoCliente();
+        var response = apiClientes.obterDados(codigoCliente);
+        pedido.setDadosCliente(response.getBody());
+    }
+
+    private void carregarDadosItensPedido(Pedido pedido){
+       List<ItemPedido> itens = itemPedidoRepository.findByPedido(pedido);
+       pedido.setItens(itens);
+       pedido.getItens().forEach(this::carregarDadosProduto);
+    }
+
+    private void carregarDadosProduto(ItemPedido itemPedido){
+        Long codigoProduto = itemPedido.getCodigoProduto();
+        var response = apiProdutos.obterDados(codigoProduto);
+        itemPedido.setNome(response.getBody().nome());
     }
 }
